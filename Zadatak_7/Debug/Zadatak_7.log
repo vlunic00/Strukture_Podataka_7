@@ -1,0 +1,4 @@
+﻿  Source.c
+C:\Users\vedro\source\repos\Zadatak_7\Zadatak_7\Source.c(21,35): warning C4020: 'ucitaj': too many actual parameters
+C:\Users\vedro\source\repos\Zadatak_7\Zadatak_7\Source.c(28,38): warning C4029: declared formal parameter list different from definition
+  Zadatak_7.vcxproj -> C:\Users\vedro\source\repos\Zadatak_7\Debug\Zadatak_7.exe

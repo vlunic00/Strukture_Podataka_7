@@ -1,132 +1,151 @@
+#define _CRT_SECURE_NO_WARNINGS
+
 #include<stdio.h>
 #include<stdlib.h>
+#include<ctype.h>
+#include<string.h>
 
 struct stog;
-typedef struct stog* Position;
+typedef struct stog* Pozicija;
 typedef struct stog {
 	int br;
-	Position next;
-}_stack;
+	Pozicija next;
+}_st;
 
-int ucitaj(char[20]);
-Position newElement();
-void putIntoStack(Position, Position);
-void calculate(Position, char);
-void printResult(Position);
+void ucitaj(Pozicija p, char[50]);
+Pozicija stvoriClan();
+void izracunaj(Pozicija, char);
+void push(Pozicija, Pozicija);
+int pop(Pozicija);
+void ispisi(Pozicija);
 
 int main() {
-	_stack head;
-	head.next = NULL;
-	int err = 0;
-	err = ucitaj("postfix.txt", &head);
-	if (!err)
-		return -1;
+	_st head1;
 
-	printResult(&head);
+	head1.next = NULL;
+	ucitaj(&head1, "postfix.txt");
+	ispisi(&head1);
+	return 0;
+
 }
 
-int ucitaj(char dat[20], Position p) {
-	FILE* ulz = fopen(dat, "r");
-	if (ulz == NULL) {
-		printf("Greska pri otvaranju datoteke");
-		return -1;
-	}
-
-	int i = 0;
-	char temp = ' ';
-	while (!feof(ulz)) {
-		fscanf(ulz, "%c", &temp);
-		i++;
-	}
-
-	rewind(ulz);
-	char* buffer = NULL;
-	buffer = (char*)malloc(sizeof(char) * i);
-	i = 0;
-
-	while (!feof(ulz)) {
-		fscanf(ulz, "%c", (buffer + i));
-		i++;
-	}
-	fclose(ulz);
-
-	int lenght = 0;
-	int returnValue = 1;
-	int read = 0;
-
-	while (returnValue) {
-		Position q = newElement();
-		if (q == NULL) {
-			printf("Greska pri alokaciji");
-			return -2;
-		}
-		char op = ' ';
-
-		returnValue = sscanf(buffer + lenght, "%d%n", &q->br, &read);
-
-		if (returnValue == 0) {
-			returnValue = sscanf(buffer + lenght, " %c%n", &op, &read);
-			calculate(p, op);
-		}
-		else
-			putIntoStack(p, q);
-
-		lenght += read;
-	}
-
-	return 1;
-}
-Position newElement() {
-	Position p = NULL;
-	p = (Position)malloc(sizeof(Position));
-	
+Pozicija stvoriClan() {
+	Pozicija p;
+	p = (Pozicija)malloc(sizeof(struct stog));
+	if (p == NULL)
+		return NULL;
 	return p;
 }
 
-void putIntoStack(Position p, Position q) {
+void push(Pozicija p, Pozicija q) {
 	q->next = p->next;
 	p->next = q;
 }
 
-void calculate(Position p, char op) {
-	Position operand1 = NULL;
-	Position operand2 = NULL;
+int pop(Pozicija p) {
+	Pozicija q;
+	int a;
+	q = p->next;
+	a = q->br;
+	p->next = q->next;
 
-	if (p->next == NULL || p->next->next == NULL) {
-		printf("Stog nije pravilno popunjen");
+	free(q);
+	return a;
+}
+
+void ucitaj(Pozicija p, char pom[50]) {
+	FILE* ulz;
+	int n = 0;
+	int i = 0;
+	char c;
+	char* buffer;
+
+	ulz = fopen(pom, "r");
+	if (ulz == NULL) {
+		printf("Pogreska pri otvaranju datoteke.\n");
 		return;
 	}
 
-	operand2 = p->next;
-	operand1 = p->next->next;
-
-	switch (op) {
-		case '+':
-			p->next->br = operand1->br + operand2->br;
-			break;
-
-		case '-':
-			p->next->br = operand1->br - operand2->br;
-			break;
-
-		case '*':
-			p->next->br = operand1->br * operand2->br;
-			break;
-
-		case '/':
-			p->next->br = operand1->br / operand2->br;
-			break;
-
-		default:
-			printf("Nepoznata operacija\n");
-			break;
+	while (!feof(ulz)) {
+		fscanf(ulz, "%c", &c);
+		n++;
 	}
 
-	p->next = operand1->next;
-	free(operand1);
+	buffer = (char*)malloc(sizeof(char) * n);
+
+	rewind(ulz);
+
+	while (!feof(ulz)) {
+		fscanf(ulz, "%c", buffer + i);
+		i++;
+	}
+	
+	//for (i; i < strlen(buffer); i++) {
+	//	*(buffer + i) = '\0';
+	//}
+
+	fclose(ulz);
+
+	int returnValue = 1;
+	int lenght = 0;
+	int read;
+	while (returnValue) {
+		Pozicija q;
+		q = stvoriClan();
+
+		returnValue = sscanf(buffer + lenght, " %d%n", &q->br, &read);
+
+		if (returnValue == 0) {
+			returnValue = sscanf(buffer + lenght, " %c%n", &c, &read);
+			if (lenght < n)
+				izracunaj(p, c);
+			else
+				break;
+		}
+		else {
+			push(p, q);
+		}
+		lenght += read;
+	}
 }
 
-void printResult(Position p) {
-	p = p->next;
-	printf("Konacni rezultat je %d\n", p->br);
+void izracunaj(Pozicija p, char c) {
+	int a, b, d;
+	Pozicija r;
+
+	if (c == '+') {
+		a = pop(p);
+		b = pop(p);
+		d = b + a;
+		r = stvoriClan();
+		r->br = d;
+		push(p, r);
+	}
+	else if (c == '-') {
+		a = pop(p);
+		b = pop(p);
+		d = b - a;
+		r = stvoriClan();
+		r->br = d;
+		push(p, r);
+	}
+	else if (c == '*') {
+		a = pop(p);
+		b = pop(p);
+		d = b * a;
+		r = stvoriClan();
+		r->br = d;
+		push(p, r);
+	}
+	else if (c == '/') {
+		a = pop(p);
+		b = pop(p);
+		d = b / a;
+		r = stvoriClan();
+		r->br = d;
+		push(p, r);
+	}
+}
+void ispisi(Pozicija p) {
+	printf("%d", p->next->br);
 }
